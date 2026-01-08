@@ -1,0 +1,14 @@
+{
+  "name": "xueqiu-aggregator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/parse.js && node scripts/build.js"
+  },
+  "dependencies": {
+    "playwright": "^1.42.0",
+    "yaml": "^2.4.1",
+    "fs-extra": "^11.2.0"
+  }
+}

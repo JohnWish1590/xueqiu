@@ -1,0 +1,25 @@
+site:
+  title: 雪球关注动态聚合
+  timezone: Asia/Shanghai
+  base_url: https://johnwish1590.github.io/xueqiu/
+
+schedule:
+  cron: "0 * * * *"  # 每小时整点（UTC）
+  max_retries: 2
+  random_delay_ms: [800, 1800]
+
+xueqiu:
+  use_login_cookie: true
+  sync_following: true
+  only_special: false
+  target_users:
+    - { id: 1247347556, name: 段永平 }
+    - { id: 9103835084, name: 雪球资讯 }
+  include_types: [post, repost, comment, article]
+  exclude_keywords: []
+
+output:
+  keep_hourly_snapshots: true
+  dedupe_by: [user_id, post_id, created_at]
+  build_pages: true
+  generate_rss: false
