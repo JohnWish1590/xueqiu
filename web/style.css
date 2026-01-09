@@ -1,31 +1,45 @@
-.xq-theme{ --primary:#2f7df6; --bg:#f5f7fb; --card:#fff; --text:#1f2328; --muted:#6b7280; --border:#e5e7eb; }
-body{ font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial; margin:0; background:var(--bg); color:var(--text); }
-.topbar{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:var(--primary); color:#fff; position:sticky; top:0; }
-.topbar .logo{ font-weight:700; }
+.xq-theme{ --primary:#2f7df6; --bg:#f6f8fa; --card:#fff; --text:#1f2328; --muted:#666b74; --border:#e5e7eb; --accent:#2563eb; }
+/* 基础 */
+html,body{ height:100%; }
+body{ font-family: system-ui,-apple-system,"Segoe UI",Roboto,Arial; margin:0; background:var(--bg); color:var(--text); }
+/* 顶栏，靠近雪球的蓝与高度 */
+.topbar{ display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:var(--primary); color:#fff; position:sticky; top:0; z-index:100; }
+.topbar .logo{ font-weight:700; letter-spacing:.5px; }
 .topbar .actions{ display:flex; gap:8px; align-items:center; }
-.muted{ opacity:.85; font-size:12px; margin-right:6px; }
+.muted{ opacity:.9; font-size:12px; margin-right:8px; }
 .search{ padding:8px 10px; border-radius:6px; border:none; width:220px; }
 .select{ padding:8px 10px; border-radius:6px; border:none; }
+/* 主布局 */
 .layout{ display:grid; grid-template-columns:280px 1fr; gap:16px; padding:16px; }
-.sidebar{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px; height:calc(100vh - 100px); overflow:auto; }
-.timeline{ min-height:400px; }
-.user-item{ padding:8px 6px; border-radius:8px; }
+/* 侧栏：更接近雪球左侧导航卡片的感觉 */
+.sidebar{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px; height:calc(100vh - 90px); overflow:auto; }
+.user-item{ padding:10px 8px; border-radius:8px; }
 .user-item:hover{ background:#f0f5ff; }
-.user-item .nick{ color:#0f172a; text-decoration:none; }
-.card{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px; margin:10px 0; box-shadow:0 1px 2px rgba(0,0,0,.03); }
-.card-head{ display:flex; align-items:center; gap:6px; font-size:13px; color:var(--muted); }
-.card-head .nick{ color:#0f172a; font-weight:600; }
-.card-body{ margin:8px 0; line-height:1.6; }
-.card-foot{ display:flex; gap:12px; align-items:center; }
-.link{ color:#2563eb; text-decoration:none; }
+.user-item .nick{ color:#0f172a; text-decoration:none; font-weight:600; }
+/* 卡片 */
+.card{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; margin:12px 0; box-shadow:0 1px 2px rgba(0,0,0,.03); }
+.card-head{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); }
+.card-head .nick{ color:#0f172a; font-weight:700; }
+.card-body{ margin:10px 0; line-height:1.7; font-size:15px; }
+.card-body a{ color:var(--accent); text-decoration:none; }
+.card-body a:hover{ text-decoration:underline; }
+.card-foot{ display:flex; gap:14px; align-items:center; font-size:13px; color:var(--muted); }
+.link{ color:var(--accent); text-decoration:none; }
+/* Gmail风格读/未读 */
 .card.unread .card-head .nick, .card.unread .card-body{ font-weight:700; }
 .card.read .card-head .nick, .card.read .card-body{ font-weight:400; }
-.img-count{ display:inline-block; padding:4px 8px; border:1px solid var(--border); border-radius:6px; background:#fff; color:#374151; font-size:12px; cursor:pointer; }
+/* 图片按钮与计数，靠近雪球样式 */
+.img-count{ display:inline-block; padding:4px 10px; border:1px solid var(--border); border-radius:16px; background:#fff; color:#374151; font-size:12px; cursor:pointer; }
 .img-count:hover{ background:#f3f4f6; }
-.lightbox{ position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; z-index:9999; }
+.counts{ font-size:13px; color:var(--muted); margin-left:auto; display:flex; gap:14px; align-items:center; }
+.counts .icon{ display:inline-flex; gap:4px; align-items:center; }
+/* 浮窗图库：加大尺寸并支持缩放 */
+.lightbox{ position:fixed; inset:0; background:rgba(0,0,0,.7); display:none; align-items:center; justify-content:center; z-index:9999; }
 .lightbox.active{ display:flex; }
-.lightbox-content{ max-width:90vw; max-height:90vh; background:#000; padding:8px; border-radius:8px; }
-.lightbox-content img{ max-width:88vw; max-height:86vh; display:block; margin:6px auto; }
+.lightbox-content{ max-width:96vw; max-height:92vh; background:#000; padding:10px; border-radius:10px; display:flex; align-items:center; justify-content:center; }
+.lightbox-content img{ max-width:95vw; max-height:90vh; display:block; margin:auto; transition:transform .2s ease; }
+.lightbox-content img.zoom{ transform:scale(1.25); }
 .lightbox-close{ position:absolute; top:16px; right:16px; background:#fff; border:1px solid var(--border); border-radius:6px; padding:6px 10px; cursor:pointer; }
-.read-comments{ font-size:12px; color:#2563eb; text-decoration:none; }
-.counts{ font-size:12px; color:var(--muted); }
+.lightbox-nav{ position:absolute; width:96vw; display:flex; justify-content:space-between; top:50%; transform:translateY(-50%); color:#fff; font-size:26px; user-select:none; }
+.lightbox-nav .btn{ cursor:pointer; padding:8px 14px; background:rgba(0,0,0,.3); border-radius:8px; }
+.read-comments{ font-size:13px; color:var(--accent); text-decoration:none; }
