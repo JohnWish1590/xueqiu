@@ -10,6 +10,7 @@
   <header class="topbar">
     <div class="logo">❄️ 雪球关注快讯</div>
     <div class="actions">
+      <span id="lastUpdate" class="muted"></span>
       <input id="kw" class="search" placeholder="搜索内容/标的/昵称" />
       <select id="tickerSelect" class="select"></select>
       <select id="dateSelect" class="select">
@@ -38,14 +39,22 @@
         <a class="nick link" target="_blank"></a>
         <span class="dot">·</span>
         <time class="time"></time>
-        <span class="type"></span>
       </div>
       <div class="card-body"></div>
       <div class="card-foot">
         <a class="origin" target="_blank">查看原帖</a>
+        <a class="read-comments" target="_blank">阅读评论</a>
+        <span class="img-count" style="display:none">图片</span>
+        <span class="counts" style="margin-left:auto"></span>
       </div>
     </article>
   </template>
+
+  <!-- 图片浮窗 -->
+  <div class="lightbox" id="lightbox">
+    <div class="lightbox-content" id="lightboxContent"></div>
+    <button class="lightbox-close" id="lightboxClose">关闭</button>
+  </div>
 
   <script src="app.js"></script>
 </body>
