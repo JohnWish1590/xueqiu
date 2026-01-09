@@ -2,6 +2,7 @@
 // 这里先生成一个小时快照与示例数据，便于前端查看结构
 import fs from 'fs'; import path from 'path';
 const dataDir = path.join(process.cwd(), 'data');
+fs.mkdirSync(dataDir, { recursive: true }); // 新增：确保 data 目录存在
 const now = new Date(); const hour = now.toISOString().slice(0,13);
 const snap = path.join(dataDir, `${hour}.json`);
 const sample = [
