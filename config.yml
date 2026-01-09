@@ -11,10 +11,8 @@ schedule:
 xueqiu:
   use_login_cookie: true
   sync_following: true
-  only_special: false
-  target_users:
-    - { id: 1247347556, name: 段永平 }
-    - { id: 9103835084, name: 雪球资讯 }
+  only_special: true
+  target_users: []
   include_types: [post, repost, comment, article]
   exclude_keywords: []
 
