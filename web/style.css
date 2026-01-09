@@ -1,31 +1,35 @@
-/* 样式补丁：左侧“时间线”标题与现有样式保留 */
+/* 雪球风格 + 电脑端高度对齐 + 手机端自适应换行 + 链接文案修改 */
 .sidebar .timeline-entry{display:block;padding:10px 8px;border-radius:8px;margin-bottom:8px;background:#eaf2ff;color:#0f172a;font-weight:800;text-decoration:none}
 .sidebar .timeline-entry:hover{background:#dbe8ff}
 
-/* 其余保持不变（现有样式） */
 .xq-theme{ --primary:#2f7df6; --bg:#f6f8fa; --card:#fff; --text:#1f2328; --muted:#666b74; --border:#e5e7eb; --accent:#2563eb; }
+*{box-sizing:border-box}
 body{ font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, "Hiragino Sans GB", "Microsoft YaHei", system-ui, Roboto; margin:0; background:var(--bg); color:var(--text); }
 .topbar{ display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:var(--primary); color:#fff; position:sticky; top:0; z-index:100; }
 .topbar .logo{ font-weight:700; letter-spacing:.5px; }
 .topbar .actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 .muted{ opacity:.9; font-size:12px; margin-left:8px; }
-.search{ padding:8px 10px; border-radius:6px; border:none; width:220px; }
+.search{ padding:8px 10px; border-radius:6px; border:none; width:220px; max-width:100%; }
 .select{ padding:8px 10px; border-radius:6px; border:none; }
-.layout{ display:grid; grid-template-columns:280px 1fr; gap:16px; padding:16px; }
+
+/* 电脑端：左右两列高度对齐（同高） */
+.layout{ display:grid; grid-template-columns:280px 1fr; gap:16px; padding:16px; align-items:stretch; }
 .sidebar{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px; height:calc(100vh - 90px); overflow:auto; }
-.user-item{ padding:10px 8px; border-radius:8px; }
-.user-item:hover{ background:#f0f5ff; }
-.user-item .nick{ color:#0f172a; text-decoration:none; font-weight:700; }
+.timeline{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px; height:calc(100vh - 90px); overflow:auto; }
+
+/* 卡片与文本 */
 .card{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; margin:12px 0; box-shadow:0 1px 2px rgba(0,0,0,.03); }
-.card-head{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); }
+.card-head{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); flex-wrap:wrap; }
 .card-head .nick{ color:#0f172a; font-weight:800; }
-.card-body{ margin:10px 0; line-height:1.75; font-size:15px; }
+.card-body{ margin:10px 0; line-height:1.75; font-size:15px; word-break:break-word; overflow-wrap:anywhere; white-space:normal; }
 .card-body a{ color:var(--accent); text-decoration:none; }
 .card-body a:hover{ text-decoration:underline; }
-.card-foot{ display:flex; gap:14px; align-items:center; font-size:13px; color:var(--muted); }
+.card-foot{ display:flex; gap:14px; align-items:center; font-size:13px; color:var(--muted); flex-wrap:wrap; }
 .link{ color:var(--accent); text-decoration:none; }
 .card.unread .card-head .nick, .card.unread .card-body{ font-weight:800; }
 .card.read .card-head .nick, .card.read .card-body{ font-weight:400; }
+
+/* 缩略图与原图浮窗 */
 .inline-img{ max-width:260px; max-height:260px; border-radius:8px; border:1px solid var(--border); margin:8px 6px; cursor:pointer; display:inline-block; object-fit:contain; }
 .lightbox{ position:fixed; inset:0; background:rgba(0,0,0,.78); display:none; align-items:center; justify-content:center; z-index:9999; }
 .lightbox.active{ display:flex; }
@@ -35,4 +39,11 @@ body{ font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica 
 .counts{ font-size:13px; color:var(--muted); margin-left:auto; display:flex; gap:14px; align-items:center; }
 .counts .icon{ display:inline-flex; gap:4px; align-items:center; }
 .quote{ background:#f2f4f7; border:1px solid var(--border); border-radius:8px; padding:8px 10px; margin:8px 0; color:#374151; }
-@media (max-width:900px){ .layout{ grid-template-columns:1fr; } .sidebar{ display:none; } .search{ width:160px; } }
+
+/* 手机端：隐藏左栏、控件自适应换行 */
+@media (max-width:900px){
+  .layout{ grid-template-columns:1fr; }
+  .sidebar{ display:none; }
+  .topbar .actions > *{ flex:1 1 160px; min-width:140px; }
+  .search{ width:100%; }
+}
