@@ -1,7 +1,4 @@
-/* 雪球风格 + 电脑端高度对齐 + 手机端自适应换行 + 链接文案修改 */
-.sidebar .timeline-entry{display:block;padding:10px 8px;border-radius:8px;margin-bottom:8px;background:#eaf2ff;color:#0f172a;font-weight:800;text-decoration:none}
-.sidebar .timeline-entry:hover{background:#dbe8ff}
-
+/* 雪球风格 + 电脑端高度对齐 + 手机端自适应换行 + 链接文案修改 + 用户名与时间线统一样式 */
 .xq-theme{ --primary:#2f7df6; --bg:#f6f8fa; --card:#fff; --text:#1f2328; --muted:#666b74; --border:#e5e7eb; --accent:#2563eb; }
 *{box-sizing:border-box}
 body{ font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, "Hiragino Sans GB", "Microsoft YaHei", system-ui, Roboto; margin:0; background:var(--bg); color:var(--text); }
@@ -12,22 +9,30 @@ body{ font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica 
 .search{ padding:8px 10px; border-radius:6px; border:none; width:220px; max-width:100%; }
 .select{ padding:8px 10px; border-radius:6px; border:none; }
 
-/* 电脑端：左右两列高度对齐（同高） */
+/* 电脑端：左右两列同高 */
 .layout{ display:grid; grid-template-columns:280px 1fr; gap:16px; padding:16px; align-items:stretch; }
 .sidebar{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px; height:calc(100vh - 90px); overflow:auto; }
 .timeline{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px; height:calc(100vh - 90px); overflow:auto; }
 
+/* 左侧“时间线”入口（与用户名统一样式） */
+.sidebar .timeline-entry{ display:block; padding:10px 8px; border-radius:8px; margin-bottom:8px; background:#eaf2ff; color:#0f172a; font-weight:800; font-size:16px; text-decoration:none; }
+.sidebar .timeline-entry:hover{ background:#dbe8ff; color:#0f172a; }
+
+/* 用户名样式（左侧列表与卡片头部统一，无下划线、无访问色变化、始终加粗、略大于正文） */
+.user-item .nick, .card-head .nick{ color:#0f172a; text-decoration:none; font-weight:800; font-size:16px; }
+.user-item .nick:hover, .card-head .nick:hover, .user-item .nick:visited, .card-head .nick:visited{ color:#0f172a; text-decoration:none; }
+
 /* 卡片与文本 */
 .card{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; margin:12px 0; box-shadow:0 1px 2px rgba(0,0,0,.03); }
 .card-head{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); flex-wrap:wrap; }
-.card-head .nick{ color:#0f172a; font-weight:800; }
 .card-body{ margin:10px 0; line-height:1.75; font-size:15px; word-break:break-word; overflow-wrap:anywhere; white-space:normal; }
 .card-body a{ color:var(--accent); text-decoration:none; }
 .card-body a:hover{ text-decoration:underline; }
 .card-foot{ display:flex; gap:14px; align-items:center; font-size:13px; color:var(--muted); flex-wrap:wrap; }
 .link{ color:var(--accent); text-decoration:none; }
-.card.unread .card-head .nick, .card.unread .card-body{ font-weight:800; }
-.card.read .card-head .nick, .card.read .card-body{ font-weight:400; }
+/* 读/未读：帖子正文加粗/常规，但用户名始终加粗不受影响 */
+.card.unread .card-body{ font-weight:800; }
+.card.read   .card-body{ font-weight:400; }
 
 /* 缩略图与原图浮窗 */
 .inline-img{ max-width:260px; max-height:260px; border-radius:8px; border:1px solid var(--border); margin:8px 6px; cursor:pointer; display:inline-block; object-fit:contain; }
