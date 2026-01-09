@@ -10,9 +10,12 @@ schedule:
 
 xueqiu:
   use_login_cookie: true
-  sync_following: true
+  sync_following: false    # 暂时关闭自动同步，改为手动列表
   only_special: true
-  target_users: []
+  target_users:
+    - { id: 1936609590, name: 用户1936609590 }
+    - { id: 3350642636, name: 用户3350642636 }
+    - { id: 7708198303, name: 用户7708198303 }
   include_types: [post, repost, comment, article]
   exclude_keywords: []
 
