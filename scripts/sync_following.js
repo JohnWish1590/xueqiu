@@ -1,8 +1,9 @@
-// 使用 Playwright 登录态同步关注/特别关注到 config.yml.target_users
-// 说明：实际页面/接口可能调整，本脚本采取多策略尝试：
-// 1) 直接访问“我关注的人”页面，解析用户卡片
-// 2) 在页面上下文里调用站内接口（fetch），读取分组与特别关注标记
-// 若全部失败，则保留原有 target_users，不中断后续流程
+// 使用 Playwright 同步“特别关注”分组到 config.yml.target_users（基于你的截图）
+// 逻辑：
+// - 打开 关注的人 页面 https://xueqiu.com/friendships?tab=following
+// - 点击顶部“特别关注”标签
+// - 从列表中抽取 data-user-id 与昵称
+// - only_special 为 true 时，写入该分组；否则也可扩展抓全部（此版仅实现特别关注）
 
 import fs from 'fs';
 import path from 'path';
@@ -20,99 +21,57 @@ async function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 
 async function main(){
   const COOKIE = process.env.XUEQIU_COOKIE || '';
-  if(!COOKIE || !COOKIE.includes('xq_a_token=')){
-    console.log('[sync_following] 未检测到有效 XUEQIU_COOKIE，跳过同步');
-    return;
-  }
   const cfgPath = path.join(process.cwd(), 'config.yml');
   const cfg = yaml.parse(fs.readFileSync(cfgPath, 'utf8'));
-  cfg.xueqiu ||= {}; cfg.xueqiu.target_users ||= []; cfg.xueqiu.sync_following ||= true;
-  if(!cfg.xueqiu.sync_following){
-    console.log('[sync_following] 配置关闭同步，跳过');
+  cfg.xueqiu ||= {}; cfg.xueqiu.target_users ||= []; cfg.xueqiu.sync_following ??= true; cfg.xueqiu.only_special ??= true;
+
+  if(!cfg.xueqiu.sync_following){ console.log('[sync_following] 配置关闭同步'); return; }
+  if(!COOKIE || !COOKIE.includes('xq_a_token=')){
+    console.log('[sync_following] 无有效 Cookie，跳过');
     return;
   }
-  const onlySpecial = !!cfg.xueqiu.only_special;
 
   const browser = await chromium.launch();
   const context = await browser.newContext();
-  // 注入 Cookie 到上下文
-  await context.addCookies(parseCookieString(COOKIE).map(c => ({
-    name: c.name, value: c.value, domain: 'xueqiu.com', path: '/', httpOnly: false, secure: true
-  })));
+  await context.addCookies(parseCookieString(COOKIE).map(c => ({ name: c.name, value: c.value, domain: 'xueqiu.com', path: '/', httpOnly: false, secure: true })));
   const page = await context.newPage();
   try{
-    // 访问首页确认登录态
-    await page.goto('https://xueqiu.com/', { waitUntil: 'domcontentloaded' });
+    await page.goto('https://xueqiu.com/friendships?tab=following', { waitUntil: 'domcontentloaded' });
     await sleep(800 + Math.floor(Math.random()*900));
 
-    let users = [];
-    // 策略A：尝试站内接口（在登录态下应可访问）
+    // 点击“特别关注”tab（中文文本匹配）
     try{
-      const apiRes = await page.evaluate(async () => {
-        const r = await fetch('https://xueqiu.com/friendships/groups.json', { credentials: 'include' });
-        if(!r.ok) throw new Error('groups.json not ok');
-        return await r.json();
+      const tab = await page.locator('text=特别关注').first();
+      if(await tab.count() && await tab.isVisible()){
+        await tab.click();
+        await sleep(800 + Math.floor(Math.random()*900));
+      }
+    }catch{}
+
+    // 解析用户卡片
+    const users = await page.evaluate(() => {
+      const arr = [];
+      // 用户条目容器可能是 .follow__list 或通用列表
+      const rows = document.querySelectorAll('[data-user-id], .user-item, .user-card, .user__row');
+      rows.forEach(el => {
+        const id = el.getAttribute('data-user-id') || el.querySelector('[data-id]')?.getAttribute('data-id');
+        // 昵称选择器容错
+        const name = el.querySelector('.name, .user-name, .screen-name, a[href*="/u/"]')?.textContent?.trim();
+        if(id){ arr.push({ id: Number(id), name: name || String(id) }); }
       });
-      // 结构示例兼容：分组里拿到用户与是否特别关注
-      if(apiRes && Array.isArray(apiRes.groups)){
-        for(const g of apiRes.groups){
-          const special = g.name && (g.name.includes('特别') || g.name.includes('special'));
-          if(Array.isArray(g.users)){
-            for(const u of g.users){
-              users.push({ id: u.id || u.user_id || u.uid, name: u.screen_name || u.name || u.nick, special });
-            }
-          }
-        }
-      }
-    }catch(e){
-      console.log('[sync_following] 站内接口方案失败，尝试解析页面卡片...', e.message);
-    }
+      return arr;
+    });
 
-    // 策略B：解析“关注列表”页面卡片（选择器容错）
-    if(users.length === 0){
-      const candidateUrls = [
-        'https://xueqiu.com/friendships?tab=following',
-        'https://xueqiu.com/p/settings/following',
-        'https://xueqiu.com/user/following'
-      ];
-      for(const u of candidateUrls){
-        try{
-          await page.goto(u, { waitUntil: 'domcontentloaded' });
-          await sleep(800 + Math.floor(Math.random()*900));
-          const got = await page.evaluate(() => {
-            const arr = [];
-            const cards = document.querySelectorAll('[data-user-id], .user__card, .user-item');
-            cards.forEach(el => {
-              const id = el.getAttribute('data-user-id') || el.querySelector('[data-id]')?.getAttribute('data-id');
-              const name = el.querySelector('.name, .user-name, .screen-name')?.textContent?.trim();
-              const special = !!(el.querySelector('.special') || el.querySelector('.star') || el.querySelector('.icon-star'));
-              if(id) arr.push({ id: Number(id), name, special });
-            });
-            return arr;
-          });
-          if(got && got.length){ users = got; break; }
-        }catch(e){ /* continue */ }
-      }
-    }
-
-    if(users.length === 0){
-      console.log('[sync_following] 未解析到关注列表，保留原 target_users');
-    } else {
-      // 过滤只保留特别关注（若启用）
-      const filtered = onlySpecial ? users.filter(u => u.special) : users;
-      // 去重与清洗
-      const uniq = []; const seen = new Set();
-      for(const u of filtered){
-        const id = Number(u.id); if(!id || seen.has(id)) continue; seen.add(id);
-        uniq.push({ id, name: u.name || String(id) });
-      }
-      cfg.xueqiu.target_users = uniq;
+    if(users.length){
+      cfg.xueqiu.target_users = users;
       fs.writeFileSync(cfgPath, yaml.stringify(cfg));
-      console.log(`[sync_following] 同步完成，写入 ${uniq.length} 个用户${onlySpecial?'（仅特别关注）':''}`);
+      console.log(`[sync_following] 特别关注同步完成：${users.length} 人`);
+    } else {
+      console.log('[sync_following] 特别关注列表解析为空（可能页面结构与选择器不符）');
     }
   } finally {
     await browser.close();
   }
 }
 
-main().catch(e => { console.error(e); process.exit(0); /* 不阻断后续流程 */ });
+main().catch(e => { console.error(e); process.exit(0); });
