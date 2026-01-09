@@ -1,10 +1,10 @@
-/* 追加样式：图片计数按钮与浮窗图库，阅读评论按钮，昵称展示优化 */
 .xq-theme{ --primary:#2f7df6; --bg:#f5f7fb; --card:#fff; --text:#1f2328; --muted:#6b7280; --border:#e5e7eb; }
 body{ font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial; margin:0; background:var(--bg); color:var(--text); }
 .topbar{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:var(--primary); color:#fff; position:sticky; top:0; }
 .topbar .logo{ font-weight:700; }
-.topbar .actions{ display:flex; gap:8px; }
-.search{ padding:8px 10px; border-radius:6px; border:none; width:240px; }
+.topbar .actions{ display:flex; gap:8px; align-items:center; }
+.muted{ opacity:.85; font-size:12px; margin-right:6px; }
+.search{ padding:8px 10px; border-radius:6px; border:none; width:220px; }
 .select{ padding:8px 10px; border-radius:6px; border:none; }
 .layout{ display:grid; grid-template-columns:280px 1fr; gap:16px; padding:16px; }
 .sidebar{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px; height:calc(100vh - 100px); overflow:auto; }
@@ -20,13 +20,12 @@ body{ font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial; margin:0; back
 .link{ color:#2563eb; text-decoration:none; }
 .card.unread .card-head .nick, .card.unread .card-body{ font-weight:700; }
 .card.read .card-head .nick, .card.read .card-body{ font-weight:400; }
-/* 图片计数按钮 */
 .img-count{ display:inline-block; padding:4px 8px; border:1px solid var(--border); border-radius:6px; background:#fff; color:#374151; font-size:12px; cursor:pointer; }
 .img-count:hover{ background:#f3f4f6; }
-/* 浮窗图库 */
 .lightbox{ position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; z-index:9999; }
 .lightbox.active{ display:flex; }
 .lightbox-content{ max-width:90vw; max-height:90vh; background:#000; padding:8px; border-radius:8px; }
 .lightbox-content img{ max-width:88vw; max-height:86vh; display:block; margin:6px auto; }
 .lightbox-close{ position:absolute; top:16px; right:16px; background:#fff; border:1px solid var(--border); border-radius:6px; padding:6px 10px; cursor:pointer; }
 .read-comments{ font-size:12px; color:#2563eb; text-decoration:none; }
+.counts{ font-size:12px; color:var(--muted); }

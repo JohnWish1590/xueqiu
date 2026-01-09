@@ -1,29 +1,41 @@
-// 增强前端：
-// - 左侧与时间线统一显示“雪球昵称”（从数据中的 user_name 推断；若缺失，用 id 占位）
-// - 文本里解析图片链接，显示“图片(n)”并浮窗预览
-// - 阅读评论按钮直链到雪球原帖（item.url）
+// 修正昵称、更新时间、图片按钮文字与类型显示；加入评论/点赞数展示（若有）。
 
 (async function(){
   const $ = sel => document.querySelector(sel);
-  const data = await (await fetch('./data/index.json')).json();
+  const dataResp = await fetch('./data/index.json');
+  const data = await dataResp.json();
   const byUser = data.byUser||{}; const byTicker = data.byTicker||{}; const timeline = data.timeline||[];
 
-  // 建立 id->昵称 映射（优先按用户聚合中的首条，再回退到时间线中的匹配项）
+  // 更新时间：用时间线最大 created_at；若拿不到，用当前时间
+  const latest = timeline.reduce((max, i)=>{
+    const t = new Date(i.created_at).getTime();
+    return isNaN(t)? max : Math.max(max, t);
+  }, 0);
+  const last = latest? new Date(latest) : new Date();
+  $('#lastUpdate').textContent = `更新时间：${last.toLocaleString()}`;
+
+  // id -> 昵称 映射
   const idName = new Map();
   Object.keys(byUser).forEach(id => {
     const arr = byUser[id];
-    const nm = (arr && arr[0] && arr[0].user_name) ? arr[0].user_name : String(id);
-    idName.set(Number(id), nm);
+    const nm = (arr && arr[0] && arr[0].user_name) ? arr[0].user_name : null;
+    if(nm) idName.set(Number(id), nm);
   });
   timeline.forEach(it => {
     if(it.user_id && it.user_name && !idName.has(it.user_id)) idName.set(it.user_id, it.user_name);
   });
+  const ensureName = (uid, fallbackTitle='用户') => {
+    const nm = idName.get(uid);
+    if(nm && nm.trim()) return nm;
+    return `${fallbackTitle}${uid}`; // 永不显示 undefined
+  };
 
-  // 侧栏用户（显示昵称并链接到雪球主页）
+  // 侧栏用户（昵称 + 主页链接）
   const userList = $('#userList');
   const userTpl = document.getElementById('userItemTpl');
-  const users = Object.keys(byUser).map(id => ({ id: Number(id), name: idName.get(Number(id)) || String(id) }))
+  const users = Object.keys(byUser).map(id => ({ id: Number(id), name: ensureName(Number(id)) }))
                               .sort((a,b)=> (a.name||'').localeCompare(b.name||''));
+  userList.innerHTML = '';
   users.forEach(u => {
     const node = userTpl.content.cloneNode(true);
     const a = node.querySelector('.nick');
@@ -37,26 +49,24 @@
   const tickers = Object.keys(byTicker).sort();
   tickerSelect.innerHTML = '<option value="all">全部标的</option>' + tickers.map(t=>`<option value="${t}">${t}</option>`).join('');
 
-  // 读/未读存储（Gmail风格）
+  // 读/未读存储
   const storeKey = 'xq_read_hashes';
-  const getRead = () => new Set(JSON.parse(localStorage.getItem(storeKey)||'[]'));
+  const getRead = ()=> new Set(JSON.parse(localStorage.getItem(storeKey)||'[]'));
   const setRead = s => localStorage.setItem(storeKey, JSON.stringify(Array.from(s)));
 
-  // 文本中的图片链接解析（支持 xqimg.imedao.com 与常见 jpg/png/jpeg，含 !thumb 后缀）
+  // 提取图片链接（显示“图片”两个字，点开浮窗）
   function extractImages(text){
     if(!text) return [];
     const urls = [];
-    const re = /(https?:\/\/[\w.-]+\/(?:[\w\/-]+)\.(?:jpg|jpeg|png)(?:![\w.]+)?)/gi;
+    const re = /(https?:\/\/[^\s"']+\.(?:jpg|jpeg|png)(?:![\w.]+)?)/gi;
     let m; while((m = re.exec(text))){ urls.push(m[1]); }
-    // 去重
     return Array.from(new Set(urls));
   }
 
-  // 图片浮窗
   const lightbox = $('#lightbox');
   const lightboxContent = $('#lightboxContent');
   $('#lightboxClose').addEventListener('click', ()=>{ lightbox.classList.remove('active'); lightboxContent.innerHTML=''; });
-  lightbox.addEventListener('click', (e)=>{ if(e.target===lightbox) { lightbox.classList.remove('active'); lightboxContent.innerHTML=''; } });
+  lightbox.addEventListener('click', (e)=>{ if(e.target===lightbox){ lightbox.classList.remove('active'); lightboxContent.innerHTML=''; } });
   function openLightbox(imgs){
     lightboxContent.innerHTML = imgs.map(u=>`<img src="${u}" alt="image"/>`).join('');
     lightbox.classList.add('active');
@@ -80,33 +90,40 @@
     const list = (userId? (byUser[userId]||[]) : timeline)
       .filter(i => (tSel==='all' || (i.tickers||[]).includes(tSel)))
       .filter(i => inRange(i))
-      .filter(i => !kw || ((i.text||'').toLowerCase().includes(kw) || (i.title||'').toLowerCase().includes(kw) || (i.user_name||'').toLowerCase().includes(kw)) )
+      .filter(i => !kw || ((i.text||'').toLowerCase().includes(kw) || (i.title||'').toLowerCase().includes(kw) || ensureName(i.user_id).toLowerCase().includes(kw)))
       .sort((a,b)=> new Date(b.created_at)-new Date(a.created_at));
 
-    const tl = $('#timeline'); tl.innerHTML = '';
+    const tl = $('#timeline'); tl.innerHTML='';
     const tpl = document.getElementById('cardTpl');
     const read = getRead();
     list.forEach(item => {
       const node = tpl.content.cloneNode(true);
       const art = node.querySelector('.card');
       const nick = node.querySelector('.nick');
-      const name = item.user_name || idName.get(item.user_id) || String(item.user_id);
-      nick.textContent = name; nick.href = `https://xueqiu.com/u/${item.user_id}`;
+      nick.textContent = ensureName(item.user_id);
+      nick.href = `https://xueqiu.com/u/${item.user_id}`;
       node.querySelector('.time').textContent = new Date(item.created_at).toLocaleString();
-      node.querySelector('.type').textContent = item.type;
+      // 不显示类型（避免看到 0 或不必要文本）
+      // 填充正文（允许包含链接 HTML）
       node.querySelector('.card-body').innerHTML = (item.text||item.title||'');
 
       const origin = node.querySelector('.origin'); origin.href = item.url||`https://xueqiu.com/u/${item.user_id}`;
       const readComments = node.querySelector('.read-comments'); readComments.href = (item.url||`https://xueqiu.com/u/${item.user_id}`);
 
-      // 图片
+      // 图片按钮：固定显示“图片”，点击弹出浮窗
       const imgs = extractImages(item.text||item.title||'');
       const imgBtn = node.querySelector('.img-count');
       if(imgs.length){
         imgBtn.style.display = 'inline-block';
-        imgBtn.textContent = `图片(${imgs.length})`;
+        imgBtn.textContent = '图片';
         imgBtn.addEventListener('click', ()=> openLightbox(imgs));
       }
+
+      // 可选计数（若数据里有）
+      const counts = node.querySelector('.counts');
+      const cc = Number(item.comments_count||0);
+      const lc = Number(item.likes_count||0);
+      if(cc+lc>0){ counts.textContent = `评论 ${cc} · 赞 ${lc}`; }
 
       const isRead = read.has(item.hash);
       art.classList.add(isRead? 'read' : 'unread');
