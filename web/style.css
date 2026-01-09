@@ -1,4 +1,7 @@
-/* 雪球风格 + 移动端友好 + 缩略图更大 + 灰底引用块 */
+/* sidebar timeline badge */
+.sidebar .timeline-entry{display:block;padding:10px 8px;border-radius:8px;margin-bottom:8px;background:#eaf2ff;color:#0f172a;font-weight:800;text-decoration:none}
+.sidebar .timeline-entry:hover{background:#dbe8ff}
+/* keep previous styles */
 .xq-theme{ --primary:#2f7df6; --bg:#f6f8fa; --card:#fff; --text:#1f2328; --muted:#666b74; --border:#e5e7eb; --accent:#2563eb; }
 body{ font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, "Hiragino Sans GB", "Microsoft YaHei", system-ui, Roboto; margin:0; background:var(--bg); color:var(--text); }
 .topbar{ display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:var(--primary); color:#fff; position:sticky; top:0; z-index:100; }
@@ -31,9 +34,4 @@ body{ font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica 
 .counts{ font-size:13px; color:var(--muted); margin-left:auto; display:flex; gap:14px; align-items:center; }
 .counts .icon{ display:inline-flex; gap:4px; align-items:center; }
 .quote{ background:#f2f4f7; border:1px solid var(--border); border-radius:8px; padding:8px 10px; margin:8px 0; color:#374151; }
-/* 移动端适配：隐藏侧栏、顶部选择器优先 */
-@media (max-width:900px){
-  .layout{ grid-template-columns:1fr; }
-  .sidebar{ display:none; }
-  .search{ width:160px; }
-}
+@media (max-width:900px){ .layout{ grid-template-columns:1fr; } .sidebar{ display:none; } .search{ width:160px; } }
