@@ -1,4 +1,23 @@
-body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; max-width: 900px; margin: 0 auto; padding: 16px; }
-nav a { margin-right: 12px; }
-.card { border: 1px solid #ddd; border-radius: 8px; padding: 12px; margin: 10px 0; }
-.card .meta { color: #666; font-size: 12px; }
+.xq-theme{ --primary:#2f7df6; --bg:#f5f7fb; --card:#fff; --text:#1f2328; --muted:#6b7280; --border:#e5e7eb; }
+body{ font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial; margin:0; background:var(--bg); color:var(--text); }
+.topbar{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:var(--primary); color:#fff; position:sticky; top:0; }
+.topbar .logo{ font-weight:700; }
+.topbar .actions{ display:flex; gap:8px; }
+.search{ padding:8px 10px; border-radius:6px; border:none; width:240px; }
+.select{ padding:8px 10px; border-radius:6px; border:none; }
+.layout{ display:grid; grid-template-columns:280px 1fr; gap:16px; padding:16px; }
+.sidebar{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px; height:calc(100vh - 100px); overflow:auto; }
+.timeline{ min-height:400px; }
+.user-item{ padding:8px 6px; border-radius:8px; }
+.user-item:hover{ background:#f0f5ff; }
+.user-item .nick{ color:#0f172a; text-decoration:none; }
+.card{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px; margin:10px 0; box-shadow:0 1px 2px rgba(0,0,0,.03); }
+.card-head{ display:flex; align-items:center; gap:6px; font-size:13px; color:var(--muted); }
+.card-head .nick{ color:#0f172a; font-weight:600; }
+.card-body{ margin:8px 0; line-height:1.6; }
+.card-foot{ display:flex; gap:12px; align-items:center; }
+.link{ color:#2563eb; text-decoration:none; }
+/* Gmail风格的读/未读：未读加粗，读过常规 */
+.card.unread .card-head .nick, .card.unread .card-body{ font-weight:700; }
+.card.read .card-head .nick, .card.read .card-body{ font-weight:400; }
+@media (max-width:900px){ .layout{ grid-template-columns:1fr; } .sidebar{ height:auto; } }
