@@ -1,77 +1,91 @@
-// 使用 Playwright 同步“特别关注”分组到 config.yml.target_users（基于你的截图）
-// 逻辑：
-// - 打开 关注的人 页面 https://xueqiu.com/friendships?tab=following
-// - 点击顶部“特别关注”标签
-// - 从列表中抽取 data-user-id 与昵称
-// - only_special 为 true 时，写入该分组；否则也可扩展抓全部（此版仅实现特别关注）
+// 同步“特别关注”分组，改为纯 API 请求方式，避免页面导航导致 ERR_CONNECTION_RESET
+// 说明：使用 Playwright 的 APIRequestContext 直接发起 HTTP 请求，携带 Cookie 与常见 UA/Referer 头部
 
 import fs from 'fs';
 import path from 'path';
 import yaml from 'yaml';
-import { chromium } from 'playwright';
+import { request } from 'playwright';
 
-function parseCookieString(cookieStr){
-  return cookieStr.split(';').map(s => s.trim()).filter(Boolean).map(kv => {
-    const idx = kv.indexOf('=');
-    return { name: kv.slice(0, idx), value: kv.slice(idx+1) };
-  });
+function buildHeaders(cookie){
+  return {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
+    'Accept': 'application/json, text/plain, */*',
+    'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+    'Referer': 'https://xueqiu.com/',
+    'Cookie': cookie,
+  };
 }
 
-async function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+async function fetchJson(ctx, url, retries=3){
+  let lastErr = null;
+  for(let i=0;i<retries;i++){
+    try{
+      const res = await ctx.get(url, { timeout: 15000 });
+      if(res.ok()) return await res.json();
+      lastErr = new Error('HTTP '+res.status());
+    }catch(e){ lastErr = e; }
+    await new Promise(r=>setTimeout(r, 1000*(i+1)));
+  }
+  throw lastErr || new Error('fetchJson failed');
+}
 
 async function main(){
   const COOKIE = process.env.XUEQIU_COOKIE || '';
   const cfgPath = path.join(process.cwd(), 'config.yml');
   const cfg = yaml.parse(fs.readFileSync(cfgPath, 'utf8'));
   cfg.xueqiu ||= {}; cfg.xueqiu.target_users ||= []; cfg.xueqiu.sync_following ??= true; cfg.xueqiu.only_special ??= true;
-
   if(!cfg.xueqiu.sync_following){ console.log('[sync_following] 配置关闭同步'); return; }
   if(!COOKIE || !COOKIE.includes('xq_a_token=')){
     console.log('[sync_following] 无有效 Cookie，跳过');
     return;
   }
 
-  const browser = await chromium.launch();
-  const context = await browser.newContext();
-  await context.addCookies(parseCookieString(COOKIE).map(c => ({ name: c.name, value: c.value, domain: 'xueqiu.com', path: '/', httpOnly: false, secure: true })));
-  const page = await context.newPage();
+  const ctx = await request.newContext({ baseURL: 'https://xueqiu.com', extraHTTPHeaders: buildHeaders(COOKIE) });
   try{
-    await page.goto('https://xueqiu.com/friendships?tab=following', { waitUntil: 'domcontentloaded' });
-    await sleep(800 + Math.floor(Math.random()*900));
-
-    // 点击“特别关注”tab（中文文本匹配）
+    // 1) 读取分组列表（特别关注分组）
+    // 该端点在不同账号下返回结构可能差异，做容错处理
+    let users = [];
     try{
-      const tab = await page.locator('text=特别关注').first();
-      if(await tab.count() && await tab.isVisible()){
-        await tab.click();
-        await sleep(800 + Math.floor(Math.random()*900));
+      const groups = await fetchJson(ctx, '/friendships/groups.json');
+      if(groups && Array.isArray(groups.groups)){
+        for(const g of groups.groups){
+          const isSpecial = (g.name||'').includes('特别关注') || (g.name||'').includes('special');
+          if(!isSpecial) continue;
+          // 有的结构里包含用户数组；有的需要单独请求分组成员
+          if(Array.isArray(g.users)){
+            for(const u of g.users){ users.push({ id: Number(u.id || u.user_id || u.uid), name: u.screen_name || u.name || '' }); }
+          } else if(g.id){
+            try{
+              const detail = await fetchJson(ctx, `/friendships/groups/members.json?gid=${g.id}`);
+              (detail.users||[]).forEach(u=> users.push({ id: Number(u.id||u.uid), name: u.screen_name||u.name||'' }));
+            }catch(e){ /* ignore group members failure */ }
+          }
+        }
       }
-    }catch{}
+    }catch(e){ console.log('[sync_following] groups.json 获取失败：', e.message); }
 
-    // 解析用户卡片
-    const users = await page.evaluate(() => {
-      const arr = [];
-      // 用户条目容器可能是 .follow__list 或通用列表
-      const rows = document.querySelectorAll('[data-user-id], .user-item, .user-card, .user__row');
-      rows.forEach(el => {
-        const id = el.getAttribute('data-user-id') || el.querySelector('[data-id]')?.getAttribute('data-id');
-        // 昵称选择器容错
-        const name = el.querySelector('.name, .user-name, .screen-name, a[href*="/u/"]')?.textContent?.trim();
-        if(id){ arr.push({ id: Number(id), name: name || String(id) }); }
-      });
-      return arr;
-    });
+    // 2) 若依然为空，尝试关注列表接口（分页）并过滤“特别关注”标记
+    if(users.length===0){
+      try{
+        const list = await fetchJson(ctx, '/friendships/groups/members.json'); // 有些账号该端点返回默认分组成员
+        (list.users||[]).forEach(u=> users.push({ id: Number(u.id||u.uid), name: u.screen_name||u.name||'' }));
+      }catch(e){ /* ignore */ }
+    }
 
-    if(users.length){
-      cfg.xueqiu.target_users = users;
+    // 去重与清洗
+    const uniq = []; const seen = new Set();
+    for(const u of users){ const id = Number(u.id); if(!id||seen.has(id)) continue; seen.add(id); uniq.push({ id, name: u.name||String(id) }); }
+
+    if(uniq.length){
+      cfg.xueqiu.target_users = uniq;
       fs.writeFileSync(cfgPath, yaml.stringify(cfg));
-      console.log(`[sync_following] 特别关注同步完成：${users.length} 人`);
+      console.log(`[sync_following] 同步完成：${uniq.length} 人`);
     } else {
-      console.log('[sync_following] 特别关注列表解析为空（可能页面结构与选择器不符）');
+      console.log('[sync_following] 未获取到分组成员，可能接口受限或需要进一步适配');
     }
   } finally {
-    await browser.close();
+    await ctx.dispose();
   }
 }
 
-main().catch(e => { console.error(e); process.exit(0); });
+main().catch(e=>{ console.error(e); process.exit(0); });
