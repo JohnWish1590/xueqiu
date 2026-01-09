@@ -10,9 +10,7 @@
   <header class="topbar">
     <div class="logo">❄️ 雪球关注快讯 <span id="lastUpdateInline" class="muted"></span></div>
     <div class="actions">
-      <!-- 顶部时间线按钮（默认显示所有用户的时间线） -->
       <button id="timelineBtn" class="select" style="cursor:pointer">时间线</button>
-      <!-- 顶部用户选择（移动端优先，桌面也可用） -->
       <select id="userSelect" class="select">
         <option value="all">全部用户</option>
       </select>
@@ -28,7 +26,11 @@
   </header>
 
   <main class="layout">
-    <aside class="sidebar" id="userList"></aside>
+    <aside class="sidebar" id="userList">
+      <!-- 左侧：时间线入口（像你标注的“时间线”标题） -->
+      <a id="sidebarTimeline" class="timeline-entry" href="#">时间线</a>
+      <!-- 下面用户列表由 JS 填充 -->
+    </aside>
     <section class="timeline" id="timeline"></section>
   </main>
 
@@ -63,4 +65,3 @@
   <script src="app.js"></script>
 </body>
 </html>
-

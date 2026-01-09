@@ -1,7 +1,8 @@
-/* sidebar timeline badge */
+/* 样式补丁：左侧“时间线”标题与现有样式保留 */
 .sidebar .timeline-entry{display:block;padding:10px 8px;border-radius:8px;margin-bottom:8px;background:#eaf2ff;color:#0f172a;font-weight:800;text-decoration:none}
 .sidebar .timeline-entry:hover{background:#dbe8ff}
-/* keep previous styles */
+
+/* 其余保持不变（现有样式） */
 .xq-theme{ --primary:#2f7df6; --bg:#f6f8fa; --card:#fff; --text:#1f2328; --muted:#666b74; --border:#e5e7eb; --accent:#2563eb; }
 body{ font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, "Hiragino Sans GB", "Microsoft YaHei", system-ui, Roboto; margin:0; background:var(--bg); color:var(--text); }
 .topbar{ display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:var(--primary); color:#fff; position:sticky; top:0; z-index:100; }
